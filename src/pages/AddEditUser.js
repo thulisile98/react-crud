@@ -125,7 +125,7 @@ const handleSubmit= async (e) =>{
       <Grid centered verticalAlign="middle" columns="3" style={{height:"80vh"}}>
         <Grid.Row>
             <Grid.Column textAlign="center">
-             <div>
+             <div style={{height:"250px", width:"500px"}}>
                 {isSubmit? <Loader active inline="centered" size="huge" />:(
                    <>
                    <h2>{id ? "update User" : "Add user"}</h2>
@@ -133,7 +133,6 @@ const handleSubmit= async (e) =>{
                      <Form.Input label="fullName" error={errors.fullName ? {content:errors.fullName}: null} placeHolder="Enter Full Name" name="fullName" onChange={handleChange} value={fullName} autoFocus />
                      <Form.Input label="email"  error={errors.email ? {content:errors.email}: null} placeHolder="Enter email" name="email" onChange={handleChange} value={email}  />
                      <Form.Input label="jobTitle"  error={errors.jobTitle ? {content:errors.jobTitle}: null} placeHolder="Enter job Title" name="jobTitle" onChange={handleChange} value={jobTitle} />
-
                      <Form.Input     label="Upload" type="file" onChange={(e)=> setFile(e.target.files[0])}>
                      </Form.Input>
                      <Button primary type="submit" disabled={progress !== null &&  progress < 100}>Add Member</Button>

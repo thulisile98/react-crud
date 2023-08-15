@@ -40,15 +40,15 @@ const Home = () => {
     <Card.Group>
         <Grid stackable>
             {users && users.map((item)=>(
-                  <Grid.Column key={item.id}>
-                    <Card>
+                  <Grid.Row key={item.id}>
+                    <Card style={{width:"1000px"}}>
 
                         <Card.Content>
                         
-                           <Image src={item.img} size="medium" 
-                           style={{height:"150px",
+                           <Image src={item.img} size="large" 
+                           style={{height:"100px",
                            width:"150px",
-                           borderRadius:"50%",}}  /> 
+                           borderRadius:"20%",}}  /> 
                         <Card.Header style={{ marginTop: '10px', textAlign: 'center' }}>{item.fullName}</Card.Header>
                         <Card.Description>{item.jobTitle}</Card.Description>
                         </Card.Content>
@@ -56,15 +56,16 @@ const Home = () => {
                         <Card.Content extra>
                           <div>
                             <Button  onClick={()=>navigate(`/update/${item.id}`)}> <Icon name='edit' size='large' /></Button>
-                            <Button color="green" onClick={()=>handleModal(item)}>VIEW</Button>
+                            <Button color="grey" onClick={()=>handleModal(item)}>VIEW</Button>
                             {open && (<ModalComp open={open} setOpen={setOpen}  handleDelete={()=> console.log("delete")}
                             {...user} />)}
+                            <Button><Icon name='trash' size='large' /></Button>
                           </div>
                         </Card.Content>
 
                     </Card>
 
-                   </Grid.Column>
+                   </Grid.Row>
             ))}
           
         </Grid>
