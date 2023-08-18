@@ -1,9 +1,11 @@
+
 import React, {useEffect,useState} from 'react';
 import{db} from "../firebase";
 import {Button,Card, Grid,  Container, Image,Icon, CardDescription, Modal} from "semantic-ui-react";
 import { useNavigate } from 'react-router-dom';
-import {collection, doc, onSnapshot } from 'firebase/firestore';
+import {collection, deleteDoc, doc, onSnapshot } from 'firebase/firestore';
 import ModalComp from '../components/ModalComp';
+import  './Home.css';
 
 
 const Home = () => {
@@ -35,43 +37,62 @@ const Home = () => {
      setUser(item);
     };
 
+    const handleDelete= async (id)=>{
+      if(window.confirm("Are sure you want to delete the user ?"))
+      {
+        try{
+          setOpen(false);
+          await deleteDoc(doc(db, "users",id));
+          setUsers(users.filter((user)=> user.id !== id));
+        }catch(err)
+        {
+          console.log(err);
+        }
+      }
+    }
+
+
+
   return (
-   <Container>
-    <Card.Group>
-        <Grid stackable>
-            {users && users.map((item)=>(
-                  <Grid.Row key={item.id}>
-                    <Card style={{width:"1000px"}}>
+    <Container className="contain">
+    <Grid stackable>
+      {users &&
+        users.map((item) => (
+          <Grid.Row key={item.id}>
+            <Card className="cardbox">
+              <Card.Content>
+                <Image className='img' src={item.img} />
+                <div className="card-content">
 
-                        <Card.Content>
-                        
-                           <Image src={item.img} size="large" 
-                           style={{height:"100px",
-                           width:"150px",
-                           borderRadius:"20%",}}  /> 
-                        <Card.Header style={{ marginTop: '10px', textAlign: 'center' }}>{item.fullName}</Card.Header>
-                        <Card.Description>{item.jobTitle}</Card.Description>
-                        </Card.Content>
+                  <div className='content'>
+                  <Card.Header className="nameWrapper">{item.fullName}</Card.Header>
+                  <Card.Description className="description">{item.jobTitle}</Card.Description>
+                  </div>
 
-                        <Card.Content extra>
-                          <div>
-                            <Button  onClick={()=>navigate(`/update/${item.id}`)}> <Icon name='edit' size='large' /></Button>
-                            <Button color="grey" onClick={()=>handleModal(item)}>VIEW</Button>
-                            {open && (<ModalComp open={open} setOpen={setOpen}  handleDelete={()=> console.log("delete")}
-                            {...user} />)}
-                            <Button><Icon name='trash' size='large' /></Button>
-                          </div>
-                        </Card.Content>
-
-                    </Card>
-
-                   </Grid.Row>
-            ))}
-          
-        </Grid>
-    </Card.Group>
-
-   </Container>
+                  <div className="buttons">
+                    <Button onClick={() => navigate(`/update/${item.id}`)}>
+                      <Icon name="edit" />
+                    </Button>
+                    <Button onClick={() => handleModal(item)}>
+                      <Icon name="eye" />
+                    </Button>
+                    {open && (
+                      <ModalComp
+                        open={open}
+                        setOpen={setOpen}
+                        handleDelete={handleDelete}
+                        {...user}
+                      />
+                    )}
+                  </div>
+                </div>
+              </Card.Content>
+            </Card>
+          </Grid.Row>
+        ))}
+    </Grid>
+  </Container>
+  
   )
 }
 

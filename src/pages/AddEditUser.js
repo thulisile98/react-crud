@@ -1,5 +1,5 @@
 import React,{useState,useEffect} from 'react';
-import {Button, Form, Grid, Loader} from "semantic-ui-react";
+import {Button, Form, Grid, Loader,Message} from "semantic-ui-react";
 import {storage,db} from "../firebase";
 import{useParams, useNavigate} from "react-router-dom";
 import { getDownloadURL,uploadBytesResumable, ref } from 'firebase/storage';
@@ -22,11 +22,19 @@ const [progress, setProgress]= useState(null);
 const [errors, setErrors]= useState({});
 const [isSubmit, setIsSubmit]= useState(false);
 const navigate = useNavigate();
+const [noMembers, setNoMembers] = useState(false);
 const   {id}=useParams();
 
 useEffect(()=>{
 id && getSingleUser();
 },[id])
+
+useEffect(() => {
+    if (noMembers) {
+      setData(initialState);
+      setErrors({});
+    }
+  }, [noMembers]);
 
 const getSingleUser = async()=>{
     const docRef =  doc(db,"users", id);
@@ -34,6 +42,8 @@ const getSingleUser = async()=>{
 
     if(snapshot.exists()){
         setData({...snapshot.data()});
+    }  else {
+        setNoMembers(true);
     }
 
 }
@@ -61,12 +71,42 @@ useEffect(()=>{
             console.log(error)
         },()=>{
             getDownloadURL(uploadTask.snapshot.ref).then((downloadURL)=>{
-                setData((prev)=>({...prev, img:downloadURL}))
-            })
-        });
+                setData((prev)=>({...prev, img:downloadURL}));
+            });
+        }
+        );
     };
    file && UploadFile()
 },[file]);
+
+const handleImageUpload = async () => {
+    if (file) {
+      const name = new Date().getTime() + file.name;
+      const storageRef = ref(storage, name);
+      const uploadTask = uploadBytesResumable(storageRef, file);
+      await uploadTask;
+
+      const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+      return downloadURL;
+    }
+    return null;
+  };
+
+const handleEditUser = async () => {
+    const newImageURL = await handleImageUpload();
+
+    try {
+      await updateDoc(doc(db, 'users', id), {
+        ...data,
+        img: newImageURL || data.img, 
+        timestamp: serverTimestamp()
+      });
+      navigate('/');
+    } catch (error) {
+      console.error('Error updating user:', error);
+    }
+  };
+
 
 
 const handleChange=(e) =>{
@@ -76,6 +116,7 @@ const handleChange=(e) =>{
 
 const validate =()=>{
     let errors = {};
+
     if(!fullName){
         errors.fullName = "Name is Required"
     }
@@ -97,7 +138,7 @@ const handleSubmit= async (e) =>{
     if(!id){
         try{
             await addDoc(collection(db,"users"),{
-                ...data, timestamp: serverTimestamp()
+             ...data, timestamp: serverTimestamp()
             });
         }catch(error)
         {
@@ -126,17 +167,22 @@ const handleSubmit= async (e) =>{
         <Grid.Row>
             <Grid.Column textAlign="center">
              <div style={{height:"250px", width:"500px"}}>
-                {isSubmit? <Loader active inline="centered" size="huge" />:(
+             {noMembers ? ( 
+                <Message info>
+                  <Message.Header>No members in the database.</Message.Header>
+                  <p>Please add a member to the database.</p>
+                </Message>
+                 ) :isSubmit? <Loader active inline="centered" size="huge" />:(
                    <>
-                   <h2>{id ? "update User" : "Add user"}</h2>
+                   <h2>{id ? "UPDATE MEMBER" : "ADD MEMBER"}</h2>
                    <Form onSubmit={handleSubmit}>
                      <Form.Input label="fullName" error={errors.fullName ? {content:errors.fullName}: null} placeHolder="Enter Full Name" name="fullName" onChange={handleChange} value={fullName} autoFocus />
                      <Form.Input label="email"  error={errors.email ? {content:errors.email}: null} placeHolder="Enter email" name="email" onChange={handleChange} value={email}  />
                      <Form.Input label="jobTitle"  error={errors.jobTitle ? {content:errors.jobTitle}: null} placeHolder="Enter job Title" name="jobTitle" onChange={handleChange} value={jobTitle} />
-                     <Form.Input     label="Upload" type="file" onChange={(e)=> setFile(e.target.files[0])}>
+                     <Form.Input label="Upload" type="file" onChange={(e)=> setFile(e.target.files[0])}>
                      </Form.Input>
-                     <Button primary type="submit" disabled={progress !== null &&  progress < 100}>Add Member</Button>
-
+                     <Button primary type="submit" disabled={progress !== null &&  progress < 100}  style={{backgroundColor:"grey"}} onClick={handleEditUser}>Add Member</Button>
+                
                    </Form>
                    </>
                 )}
